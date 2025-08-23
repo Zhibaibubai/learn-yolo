@@ -22,3 +22,11 @@
  - show=True ：显示检测结果
  - save=True ：保存检测结果
  - project="runs/detect" ：修改保存路径
+
+ ## 训练模型前的必备工作
+ - 准备数据集结构文件
+ - 根目录创建一个文件夹(可自定义名称)
+ - 下面再创建两个文件夹(images 和 labels)
+ - images 和 labels 下再分别创建两个文件夹(train 和 val)
+ - images 下的 train 和 val 放入训练图片(jpg、png)
+ - labels 下的 train 和 val 放入图片标注(txt)
