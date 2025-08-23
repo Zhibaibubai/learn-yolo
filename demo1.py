@@ -8,4 +8,4 @@ from ultralytics import YOLO
 model = YOLO("yolov8n.pt")
 
 # 2、目标检测
-results = model("https://i0.hdslb.com/bfs/archive/a74136e5a14f5a5a0a9721dbf8d9f400ade61f05.jpg", show=True, save=True, project="runs/detect")
+results = model("test.mp4", show=True, save=True, project="runs/detect")
