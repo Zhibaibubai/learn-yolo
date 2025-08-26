@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人类情绪实时检测</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .video-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #video-stream {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #stopBtn {
+            background-color: #f44336;
+        }
+        #stopBtn:hover {
+            background-color: #da190b;
+        }
+        #toggleBtn {
+            background-color: #008CBA;
+        }
+        #toggleBtn:hover {
+            background-color: #007B9A;
+        }
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e7f3ff;
+        }
+        .status-item {
+            display: inline-block;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        .status-value {
+            color: #008CBA;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YOLOv8 实时检测系统</h1>
+        
+        <div class="video-container">
+            <img id="video-stream" src="{{ url_for('video_feed') }}" alt="视频流">
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">启动摄像头</button>
+            <button id="stopBtn">停止摄像头</button>
+            <button id="toggleBtn">开启检测</button>
+        </div>
+        
+        <div class="status">
+            <div class="status-item">摄像头状态: <span id="camera-status" class="status-value">未知</span></div>
+            <div class="status-item">检测状态: <span id="detection-status" class="status-value">关闭</span></div>
+            <div class="status-item">模型状态: <span id="model-status" class="status-value">未知</span></div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const cameraStatus = document.getElementById('camera-status');
+        const detectionStatus = document.getElementById('detection-status');
+        const modelStatus = document.getElementById('model-status');
+        const videoStream = document.getElementById('video-stream');
+
+        // 更新状态显示
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    cameraStatus.textContent = data.camera_status ? '运行中' : '已停止';
+                    cameraStatus.style.color = data.camera_status ? 'green' : 'red';
+                    
+                    detectionStatus.textContent = data.detecting ? '开启' : '关闭';
+                    detectionStatus.style.color = data.detecting ? 'green' : 'red';
+                    
+                    modelStatus.textContent = data.model_loaded ? '已加载' : '未加载';
+                    modelStatus.style.color = data.model_loaded ? 'green' : 'red';
+                })
+                .catch(error => {
+                    console.error('状态更新失败:', error);
+                });
+        }
+
+        // 启动摄像头
+        startBtn.addEventListener('click', function() {
+            fetch('/start_camera', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                updateStatus();
+                // 重新加载视频流
+                videoStream.src = "{{ url_for('video_feed') }}?t=" + new Date().getTime();
+            })
+            .catch(error => {
+                console.error('启动失败:', error);
+                alert('启动摄像头失败');
+            });
+        });
+
+        // 停止摄像头
+        stopBtn.addEventListener('click', function() {
+            fetch('/stop_camera', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                updateStatus();
+            })
+            .catch(error => {
+                console.error('停止失败:', error);
+                alert('停止摄像头失败');
+            });
+        });
+
+        // 切换检测
+        toggleBtn.addEventListener('click', function() {
+            fetch('/toggle_detection', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                detectionStatus.textContent = data.detecting ? '开启' : '关闭';
+                detectionStatus.style.color = data.detecting ? 'green' : 'red';
+            })
+            .catch(error => {
+                console.error('切换失败:', error);
+                alert('切换检测状态失败');
+            });
+        });
+
+        // 定期更新状态
+        setInterval(updateStatus, 1000);
+        
+        // 初始化状态
+        updateStatus();
+    </script>
+</body>
+</html>
